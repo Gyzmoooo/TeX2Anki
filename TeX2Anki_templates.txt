@@ -1,0 +1,22 @@
+DIMOSTRAZIONE
+
+[latex]
+\textit{Proof}. To prove it by contradiction try and assume that the statement is false, proceed from there and at some point you will arrive to a contradiction.  QED
+[/latex]
+
+
+TEOREMA
+
+[latex]
+\textbf{Teorema 1 (Teorema di Pitagora)} \textit{This is a theorem about right triangles and can be summarised in the next
+equation
+\[x^2 + y^2 = z^2 \]
+}
+[/latex]
+
+
+DEFINIZIONE
+
+[latex]
+\textbf{Definizione 1} (Fibration). A fibration is a mapping between two topological spaces that has the homotopy lifting property for every space \(X\).
+[/latex]

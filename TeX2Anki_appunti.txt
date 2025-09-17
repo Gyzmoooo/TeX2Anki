@@ -1,0 +1,11 @@
+0. Esegui il codice specificando come parametro nel terminale il nome del mazzo Anki (se non esiste il mazzo crealo)
+
+1. Cerca \begin{theorem}, {definition}, {proof}
+2. Salva la riga successiva al \begin, in cui c'è \label{} con il nome da inserire nella flashcard
+3. Verifica se il nome si trova già nel mazzo o meno
+4. Se il nome non si trova nel file txt che contiene tutti i nomi, inseriscilo
+5. Parsa il testo intorno al codice da inserire nella Flashcard
+6. Genera il testo effettivo racchiuso da [latex] e [/latex]
+7. Crea una flashcard e aggiungila nel mazzo
+
+Dal 2 al 7 va iterato per tutto il codice LaTeX
