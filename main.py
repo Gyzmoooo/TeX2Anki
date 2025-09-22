@@ -3,6 +3,7 @@ from pylatexenc.latexwalker import LatexWalker, LatexEnvironmentNode, LatexMacro
 from pylatexenc.latexnodes.parsers import LatexGeneralNodesParser
 from pylatexenc.latexnodes.nodes import LatexNodeList
 import argparse
+import random
 
 parser = argparse.ArgumentParser()
 
@@ -24,10 +25,13 @@ class MathBlock:
             return f"{self.block_type}(title='{self.title}', label='{self.label}')"
         return f"{self.block_type}(label='{self.label}')"
 
-class Parser:
-    def __init__(self, notes_path, env_names=["theorem","proof","lemma","corollary","remark","definition"]):
+class FlashcardCreator:
+    def __init__(self, deck_name, notes_path, deck_folder, env_names=["theorem","proof","lemma","corollary","remark","definition"]):
+        self.deck_name = deck_name
         self.notes_path = notes_path
+        self.deck_folder = deck_folder
         self.env_names = env_names
+        
         self.blocks_list = []
 
     def tex_2_string(self):
@@ -50,14 +54,15 @@ class Parser:
 
     def blocks_creator(self, nodes):
         r"""
-        Converts the string got from tex_2_string to a list of :py:class:`MathBlock` objects
+        Converts the string got from tex_2_string to a list of :py:class:`MathBlock` objects. Runs
+        recursively to check for nested nodes.
 
         Arguments:
         
         - nodes, the return value of the :py:class:`LatexGeneralNodesParser` parser, which is expected to be a
         :py:class:`LatexNode` or :py:class:`LatexNodeList` instance
 
-        Doesn't return anything, it only changes the value of self.blocks_list
+        Doesn't return anything, it only changes the value of self.blocks_list. 
         """
         for node in nodes:
             if node.isNodeType(LatexEnvironmentNode) and node.environmentname in self.env_names:
@@ -94,40 +99,82 @@ class Parser:
 
     def parse(self):
         r"""
-        The main function of the :py:class:`Parser`. Runs tex_2_string and blocks_creator
-
-        Returns self.blocks_list
+        Runs tex_2_string and blocks_creator in order to parse the .tex file and return a list of 
+        :py:class:`MathBlock` objects.
         """
-
         self.latex_string = self.tex_2_string()
         lw = LatexWalker(self.latex_string)
         nodelist, parsing_state = lw.parse_content(LatexGeneralNodesParser())
         self.blocks_creator(nodelist)
         
         return self.blocks_list
-
-
-class FlashcardCreator:
-    def __init__(self, deck_name, deck_folder, notes_parser: Parser):
-        self.deck_name = deck_name
-        self.deck_folder = deck_folder
-        self.blocks_list = notes_parser.blocks_list
-
-        
-
-
-
-
     
+    def format_answer(self, block: MathBlock):
+        r"""
+        Runs tex_2_string and blocks_creator in order to parse the .tex file and return a list of 
+        :py:class:`MathBlock` objects.
+        """
 
-p = Parser(notes_path=args.notes)
-p.parse()
+        answer = ''
 
-fc = FlashcardCreator(9, 3, notes_parser=p)
-#fc.culo()
-    
+        if block.block_type != "proof" and block.block_type != "definition":
+            answer = '[latex] \textbf{' + f'{block.title}' '} \textit{' + f'{block.content}' '} [/latex]'
+
+        elif block.block_type == "proof":
+            answer = '[latex] \textit{Proof} ' + '\textit{' f'{block.content}' + '}  QED [/latex]'
+
+        elif block.block_type == "definition":
+            try:
+                split_index = block.title.index('(')
+                definition_N = block.title[:split_index].strip()
+                concept_defined = block.title[split_index:]
+                
+            except ValueError:
+                print("Error: the definition title does not contain '('.")
+
+            answer = '[latex] \textbf' + f'{definition_N}' + '} ' f'({concept_defined}). ' + '\textit{' + f'{block.content}' + '} [/latex]'
+
+        return answer
+
+
+fc = FlashcardCreator("culo", notes_path=args.notes, deck_folder="culo2")
+
 
 '''
 if __name__ == "__main__":
-    p = Parser(args.deck, args.path, args.folder)
-    fc = FlashcardCreator(p)'''
+    fc = FlashcardCreator(deck_name=args.deck, notes_path=args.notes, deck_folder=args.folder)
+
+    model = genanki.Model(
+    random.randrange(1 << 30, 1 << 31), # Model ID
+    'Simple Model', # Model Name
+    fields=[
+        {'name': 'Question'},
+        {'name': 'Answer'},
+    ],
+    templates=[
+        {
+        'name': 'Card 1',
+        'qfmt': '{{Question}}', # Front format of the card
+        'afmt': '{{FrontSide}}<hr id="answer">{{Answer}}', # Back format of the card
+        },
+    ])
+
+    deck = genanki.Deck(
+    random.randrange(1 << 30, 1 << 31), # Deck ID
+    args.deck) # Deck Name
+
+    cards_data = []
+    for block in fc.blocks_list:
+        cards_data.append((block.title, fc.format_answer(block)))
+
+    for question, answer in cards_data:
+        note = genanki.Note(
+            model=model,
+            fields=[question, answer]
+        )
+        deck.add_note(note)
+
+    genanki.Package(deck).write_to_file(f'{args.deck}.apkg')
+
+    print(f"'{args.deck}.apkg' deck created succesfully!")
+'''
