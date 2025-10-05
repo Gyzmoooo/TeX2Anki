@@ -4,12 +4,14 @@ from pylatexenc.latexnodes.parsers import LatexGeneralNodesParser
 from pylatexenc.latexnodes.nodes import LatexNodeList
 import argparse
 import random
+import re
+from datetime import datetime
 
 parser = argparse.ArgumentParser()
 
-#parser.add_argument("deck", help="The Anki deck's name where to insert the new flashcards")
+parser.add_argument("deck", help="The Anki deck's name where to insert the new flashcards")
 parser.add_argument("notes", help="The path to the .tex file containing the notes")
-#parser.add_argument("-f", "--folder", default="", help="The folder in which the deck will be saved")
+parser.add_argument("-f", "--folder", default="C:\\Users\\Focus\\Desktop\\Flashcard", help="The folder in which the deck will be saved")
 
 args = parser.parse_args()
 
@@ -26,7 +28,7 @@ class MathBlock:
         return f"{self.block_type}(label='{self.label}')"
 
 class FlashcardCreator:
-    def __init__(self, deck_name, notes_path, deck_folder, env_names=["theorem","proof","lemma","corollary","remark","definition"]):
+    def __init__(self, deck_name, notes_path, deck_folder, env_names=["theorem","proof","lemma","corollary","definition", "proposition"]):
         self.deck_name = deck_name
         self.notes_path = notes_path
         self.deck_folder = deck_folder
@@ -84,14 +86,15 @@ class FlashcardCreator:
                 
                 content = LatexNodeList(content_nodes).latex_verbatim().strip()
 
-                block = MathBlock(
-                    block_type=node.environmentname,
-                    title=title,
-                    content=content,
-                    label=label
-                )
+                if label == "Anki":
+                    block = MathBlock(
+                        block_type=node.environmentname,
+                        title=title,
+                        content=content,
+                        label=label
+                    )
 
-                self.blocks_list.append(block)
+                    self.blocks_list.append(block)
             
             if hasattr(node, 'nodelist') and node.nodelist is not None:
                 self.blocks_creator(node.nodelist)
@@ -116,33 +119,28 @@ class FlashcardCreator:
         """
 
         answer = ''
+        title = str(block.title)[1:-1]
 
-        if block.block_type != "proof" and block.block_type != "definition":
-            answer = '[latex] \textbf{' + f'{block.title}' '} \textit{' + f'{block.content}' '} [/latex]'
+        if block.block_type == "theorem": transl_type = "Teorema"
+        if block.block_type == "lemma": transl_type = "Lemma"
+        if block.block_type == "corollary": transl_type = "Corollario"
+        if block.block_type == "proposition": transl_type = "Proposizione"
+        if block.block_type == "proof": transl_type = "Dimostrazione"
+        if block.block_type == "definition": transl_type = "Definizione"
+        
+        #answer = "[latex] \\textbf{" + f"{transl_type}" + "}" + f' di {title}. ' + '\\textit{' + f'{block.content}' + '} [/latex]'
+        answer = '[latex]' +  f'{block.content}' + '[/latex]'
+        answer = re.sub(r"\[itemsep=.*?\]", "", answer)
+        answer = re.sub(r"\\coloneqq", "=", answer)
 
-        elif block.block_type == "proof":
-            answer = '[latex] \textit{Proof} ' + '\textit{' f'{block.content}' + '}  QED [/latex]'
-
-        elif block.block_type == "definition":
-            try:
-                split_index = block.title.index('(')
-                definition_N = block.title[:split_index].strip()
-                concept_defined = block.title[split_index:]
-                
-            except ValueError:
-                print("Error: the definition title does not contain '('.")
-
-            answer = '[latex] \textbf' + f'{definition_N}' + '} ' f'({concept_defined}). ' + '\textit{' + f'{block.content}' + '} [/latex]'
-
-        return answer
+        return answer, transl_type
 
 
-fc = FlashcardCreator("culo", notes_path=args.notes, deck_folder="culo2")
+fc = FlashcardCreator(deck_name=args.deck, notes_path=args.notes, deck_folder=args.folder)
 
-
-'''
 if __name__ == "__main__":
     fc = FlashcardCreator(deck_name=args.deck, notes_path=args.notes, deck_folder=args.folder)
+    fc.parse()
 
     model = genanki.Model(
     random.randrange(1 << 30, 1 << 31), # Model ID
@@ -159,13 +157,19 @@ if __name__ == "__main__":
         },
     ])
 
+    now = datetime.now()
+    time = now.strftime("%Y-%m-%d_%H-%M-%S")
+    name = args.deck + f"_{time}"
+
     deck = genanki.Deck(
     random.randrange(1 << 30, 1 << 31), # Deck ID
-    args.deck) # Deck Name
+    name) # Deck Name
 
     cards_data = []
     for block in fc.blocks_list:
-        cards_data.append((block.title, fc.format_answer(block)))
+
+        q = f"[latex] {fc.format_answer(block)[1]}: {block.title[1:-1]} [/latex]" if block.title != None else '[latex] Dimostrazione [/latex]'
+        cards_data.append((q, fc.format_answer(block)[0]))
 
     for question, answer in cards_data:
         note = genanki.Note(
@@ -174,7 +178,6 @@ if __name__ == "__main__":
         )
         deck.add_note(note)
 
-    genanki.Package(deck).write_to_file(f'{args.deck}.apkg')
+    genanki.Package(deck).write_to_file(args.folder + f'\\{name}.apkg')
 
-    print(f"'{args.deck}.apkg' deck created succesfully!")
-'''
+    print(f"'{name}.apkg' deck created succesfully!")

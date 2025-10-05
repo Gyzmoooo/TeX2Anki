@@ -1,0 +1,8 @@
+cached-property==2.0.1
+chevron==0.14.0
+frozendict==2.4.6
+genanki==0.13.1
+pylatexenc==3.0a33
+PyYAML==6.0.2
+setuptools==78.1.1
+wheel==0.45.1
