@@ -17,19 +17,22 @@ Tex2Anki is a specialized tool designed to bridge the gap between LaTeX-based ac
 ## 🛠️ Installation
 
 ### Prerequisites
-* [cite_start]Python 3.13.7 [cite: 1]
-* [cite_start]Conda or Pip [cite: 1]
+* Python 3.13.7
+* Conda or Pip
 
 ### Setup with Conda
-[cite_start]Note: Before running the command, ensure you remove the 'prefix' line at the bottom of environment.yml to avoid path conflicts on different machines[cite: 1].
+Note: Before running the command, ensure you remove the 'prefix' line at the bottom of environment.yml to avoid path conflicts on different machines.
 
+```bash
 conda env create -f environment.yml
 conda activate Tex2Anki
+```
 
 ### Setup with Pip
 
+```bash
 pip install -r requirements.txt
-
+```
 ---
 
 ## 📖 How to Use
@@ -38,29 +41,35 @@ pip install -r requirements.txt
 To tell the script which parts of your notes to turn into flashcards, add \label{Anki} inside the desired environment.
 
 Example:
+```latex
 \begin{theorem}[Pythagorean Theorem]
 \label{Anki}
 In a right-angled triangle, the square of the hypotenuse is equal to the sum of the squares of the other two sides: $a^2 + b^2 = c^2$.
 \end{theorem}
+```
 
 ### 2. Run the script
 Execute the script using the following command structure:
 
+```bash
 python main.py "Deck Name" "path/to/your/notes.tex" -f "output/folder/path"
+```
 
 ### Command Line Arguments
-* deck: The name of the Anki deck to be created.
-* notes: The file path to your .tex source file.
-* -f, --folder: The directory where the .apkg file will be saved. Defaults to Desktop.
+| Argument | Description | Required |
+| :--- | :--- | :--- |
+| `deck` | The name of the Anki deck to be created. | Yes |
+| `notes` | The file path to your `.tex` source file. | Yes |
+| `-f`, `--folder` | The directory where the `.apkg` file will be saved. | No |
 
 ---
 
 ## 📦 Dependencies
 The project relies on several key libraries:
-* [cite_start]genanki: For generating the .apkg files[cite: 1].
-* [cite_start]pylatexenc: For parsing and handling LaTeX nodes[cite: 1].
-* [cite_start]PyYAML: For configuration management[cite: 1].
-* [cite_start]frozendict: For immutable dictionary support[cite: 1].
+* [cite_start]`genanki`: For generating the `.apkg` files[cite: 1].
+* [cite_start]`pylatexenc`: For parsing and handling LaTeX nodes[cite: 1].
+* [cite_start]`PyYAML`: For configuration management[cite: 1].
+* [cite_start]`frozendict`: For immutable dictionary support[cite: 1].
 
 ---
 
